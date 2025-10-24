@@ -20,7 +20,7 @@ class MaskBoxCropNode:
                 "resize_mode": (["lanczos", "nearest-exact", "bilinear", "bicubic"], {"default": "lanczos"}),
             },
             "optional": {
-                "crop_grow": ("INT", {"default": 0, "min": 0, "max": 512, "step": 8, "tooltip": "裁剪区域的扩展值，0表示紧密贴合mask边缘"}),
+                "grow_factor": ("FLOAT", {"default": 1.0, "min": 1.0, "max": 5.0, "step": 0.05, "tooltip": "裁剪区域的扩展倍数，1.0表示不扩展，大于1.0表示按比例扩大"}),
             }
         }
 
@@ -87,7 +87,7 @@ class MaskBoxCropNode:
         mask_np = np.array(pil_mask).astype(np.float32) / 255.0
         return torch.from_numpy(mask_np)[None,]
     
-    def crop_and_resize(self, image, mask, resize_mode, crop_grow=0):
+    def crop_and_resize(self, image, mask, resize_mode, grow_factor=1.0):
         # 将输入转换为PIL图像
         pil_image = self._tensor_to_pil(image)
         pil_mask = self._tensor_to_pil_mask(mask)
@@ -110,8 +110,8 @@ class MaskBoxCropNode:
         
         # 确保裁剪区域是正方形，使用边界框的最大维度
         max_dim = max(bbox_width, bbox_height)
-        # 使用crop_grow参数来扩展裁剪区域
-        target_size = max_dim + crop_grow * 2  # 每边扩展crop_grow像素
+        # 使用grow_factor参数来扩展裁剪区域
+        target_size = int(max_dim * grow_factor)  # 按倍数扩展
             
         # 计算正方形的中心点
         center_x = (x1 + x2) // 2
