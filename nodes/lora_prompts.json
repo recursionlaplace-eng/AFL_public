@@ -1,0 +1,14 @@
+{
+  "path_2::QWEN\\2509\\emoji_new\\emoji_B-18-17860.safetensors": "参考角色表情，生成表情包",
+  "path_4::QWEN\\2509\\emoji_new\\emoji_B-18-17860.safetensors": "参考角色表情，生成表情包",
+  "path_1::QWEN\\2509\\emoji_new\\emoji_B-18-17860.safetensors": "参考角色表情，生成表情包",
+  "path_0::QWEN\\2509\\emoji_new\\emoji_B-18-17860.safetensors": "参考角色表情，生成表情包",
+  "path_3::QWEN\\2509\\emoji_new\\emoji_B-18-17860.safetensors": "参考角色表情，生成表情包",
+  "path_3::QWEN\\2509\\openpose_blend\\openpose_blend-8-11070.safetensors": "图像1中的不同方框颜色的角色迁移到在图像2中对应颜色线稿的位置，并参考线稿的动作。并匹配场景的光照。\n图1中的角色参考图2中的线条姿态，并放置在图2线条对应的位置，保持图1中的角色一致性，匹配场景的光照与色调。",
+  "path_4::QWEN\\2509\\openpose_blend\\openpose_blend-8-11070.safetensors": "图像1中的不同方框颜色的角色迁移到在图像2中对应颜色线稿的位置，并参考线稿的动作。并匹配场景的光照。\n图1中的角色参考图2中的线条姿态，并放置在图2线条对应的位置，保持图1中的角色一致性，匹配场景的光照与色调。",
+  "path_1::QWEN\\2509\\openpose_blend\\openpose_blend-8-11070.safetensors": "图像1中的不同方框颜色的角色迁移到在图像2中对应颜色线稿的位置，并参考线稿的动作。并匹配场景的光照。\n图1中的角色参考图2中的线条姿态，并放置在图2线条对应的位置，保持图1中的角色一致性，匹配场景的光照与色调。",
+  "path_3::QWEN\\2509\\green line_pose_control\\8.safetensors": "参考图像中的线条姿态，改变角色动作",
+  "path_3::QWEN\\2509\\line_animate_pre\\line_animate_2509_20.safetensors": "参考角色姿态，输出成年男性人体线稿：黑色线条、白色背景，去除头发、衣物和性别特征。面部中央添加一条水平线和一条垂直线的十字，用来表示面部朝向。",
+  "path_3::QWEN\\2509\\green line_pose_control\\16.safetensors": "参考图像中的线条姿态，改变角色动作",
+  "path_3::QWEN\\2509\\emoji_pre\\emoji_pre_2509_15.safetensors": "参考角色表情，生成表情包"
+}
