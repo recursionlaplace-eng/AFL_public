@@ -18,7 +18,6 @@ class CalculateOptimalResolution:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "mask": ("MASK",),
                 "mode": ("COMBO", {
                     "default": "megapixels",
                     "options": ["megapixels", "longest_side"],
@@ -45,6 +44,9 @@ class CalculateOptimalResolution:
                     "step": 1,
                     "tooltip": "分辨率需要被整除的值，确保与模型兼容"
                 }),
+            },
+            "optional": {
+                "mask": ("MASK",),
             }
         }
     
@@ -53,7 +55,7 @@ class CalculateOptimalResolution:
     FUNCTION = "calculate_optimal_resolution"
     CATEGORY = "AFL/Image Calculator"
     
-    def calculate_optimal_resolution(self, image, mask, mode, megapixels, longest_side, divisible_by):
+    def calculate_optimal_resolution(self, image, mode, megapixels, longest_side, divisible_by, mask=None):
         # 获取图像原始尺寸 (ComfyUI中的IMAGE格式为 [batch, height, width, channels])
         _, original_height, original_width, _ = image.shape
         
@@ -112,7 +114,7 @@ class CalculateOptimalResolution:
             if abs(width * adjusted_height - target_pixel_count) < abs(width * height - target_pixel_count):
                 height = adjusted_height
         
-        return (image, mask, width, height)
+        return (image, mask, width, height) if mask is not None else (image, None, width, height)
 
 # 节点注册
 NODE_CLASS_MAPPINGS = {
