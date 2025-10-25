@@ -187,7 +187,7 @@ class ImageRestoreNode:
                 "original_image": ("IMAGE",),
                 "processed_image": ("IMAGE",),
                 "crop_box": ("CROPBOX",),
-                "blur_amount": ("INT", {"default": 0, "min": 0, "max": 50, "step": 1}),
+                "blur_amount": ("INT", {"default": 0, "min": 0, "max": 200, "step": 1}),
             }
         }
     
