@@ -39,7 +39,7 @@ class CalculateOptimalResolution:
                     "tooltip": "图像最长边的目标像素数"
                 }),
                 "divisible_by": ("INT", {
-                    "default": 64,
+                    "default": 8,
                     "min": 1,
                     "max": 1024,
                     "step": 1,
