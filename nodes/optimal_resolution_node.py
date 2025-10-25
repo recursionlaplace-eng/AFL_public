@@ -9,6 +9,8 @@ class CalculateOptimalResolution:
     1. 百万像素模式：以1024×1024作为1 megapixel的基准（与ComfyUI标准一致）
     2. 最长边模式：通过指定最长边来确定图像尺寸
     根据指定参数和可整除数值，计算保持原始宽高比的最佳分辨率
+    
+    同时支持mask的传递
     """
     
     @classmethod
@@ -16,6 +18,7 @@ class CalculateOptimalResolution:
         return {
             "required": {
                 "image": ("IMAGE",),
+                "mask": ("MASK",),
                 "mode": ("COMBO", {
                     "default": "megapixels",
                     "options": ["megapixels", "longest_side"],
@@ -45,12 +48,12 @@ class CalculateOptimalResolution:
             }
         }
     
-    RETURN_TYPES = ("IMAGE", "INT", "INT")
-    RETURN_NAMES = ("image", "width", "height")
+    RETURN_TYPES = ("IMAGE", "MASK", "INT", "INT")
+    RETURN_NAMES = ("image", "mask", "width", "height")
     FUNCTION = "calculate_optimal_resolution"
     CATEGORY = "AFL/Image Calculator"
     
-    def calculate_optimal_resolution(self, image, mode, megapixels, longest_side, divisible_by):
+    def calculate_optimal_resolution(self, image, mask, mode, megapixels, longest_side, divisible_by):
         # 获取图像原始尺寸 (ComfyUI中的IMAGE格式为 [batch, height, width, channels])
         _, original_height, original_width, _ = image.shape
         
@@ -109,7 +112,7 @@ class CalculateOptimalResolution:
             if abs(width * adjusted_height - target_pixel_count) < abs(width * height - target_pixel_count):
                 height = adjusted_height
         
-        return (image, width, height)
+        return (image, mask, width, height)
 
 # 节点注册
 NODE_CLASS_MAPPINGS = {
