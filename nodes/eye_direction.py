@@ -53,8 +53,8 @@ class EyeDirectionNode:
         if not os.path.exists(FIVE_STAR_PATH):
             raise FileNotFoundError(f"五星图像文件不存在: {FIVE_STAR_PATH}")
         
-        # 读取五星图像
-        five_star_img = Image.open(FIVE_STAR_PATH).convert('RGB')  # 转换为RGB而非RGBA
+        # 读取五星图像，保留其alpha通道
+        five_star_img = Image.open(FIVE_STAR_PATH).convert('RGBA')
         
         # 获取输入图像（第一个批次）
         pil_image = self._tensor_to_pil(image[0])
@@ -80,36 +80,19 @@ class EyeDirectionNode:
         mask_width = bbox[2] - bbox[0]
         mask_height = bbox[3] - bbox[1]
         
-        # 缩放五星图像到遮罩大小
+        # 缩放五星图像到遮罩大小，同时保持alpha通道
         resized_star = five_star_img.resize((mask_width, mask_height), Image.Resampling.LANCZOS)
         
         # 创建一个与输入图像相同大小的图像副本
         result_img = pil_image.copy()
         
-        # 创建一个与遮罩大小相同的区域遮罩
-        region_mask = mask_pil.crop(bbox).resize((mask_width, mask_height), Image.Resampling.LANCZOS)
+        # 直接将缩放后的五星图像粘贴到原始图像上，使用其alpha通道
+        # 这里我们使用resized_star作为mask参数，这样PIL会使用其alpha通道进行粘贴
+        result_img.paste(resized_star, (bbox[0], bbox[1]), resized_star)
         
-        # 直接使用输入的遮罩作为融合权重，而不是依赖图像的alpha通道
-        # 转换为numpy数组进行处理
-        result_np = np.array(result_img)
-        
-        # 创建临时图像放置缩放后的五星图像
-        temp_img = Image.new('RGB', pil_image.size, (0, 0, 0))
-        temp_img.paste(resized_star, (bbox[0], bbox[1]))
-        temp_np = np.array(temp_img)
-        
-        # 准备遮罩数组，将原始遮罩放大到结果图像大小
-        full_mask_np = np.zeros_like(result_np[:, :, 0], dtype=np.float32)
-        full_mask_np[bbox[1]:bbox[3], bbox[0]:bbox[2]] = np.array(region_mask).astype(np.float32) / 255.0
-        full_mask_np = full_mask_np[:, :, np.newaxis]  # 添加通道维度
-        
-        # 使用输入遮罩进行融合，确保完全不透明
-        # 将alpha值设置为1.0以确保不透明度
-        full_mask_np = np.clip(full_mask_np, 0, 1)  # 确保值在0-1范围内
-        
-        # 融合图像
-        result_np = (result_np * (1 - full_mask_np) + temp_np * full_mask_np).astype(np.uint8)
-        result_img = Image.fromarray(result_np, 'RGB')
+        # 确保结果图像是RGB模式（无alpha通道）
+        if result_img.mode == 'RGBA':
+            result_img = result_img.convert('RGB')
         
         # 转换回张量格式并添加批次维度
         output_tensor = self._pil_to_tensor(result_img)
