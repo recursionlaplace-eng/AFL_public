@@ -21,6 +21,7 @@ if not os.path.exists(nodes_dir):
 node_files = [
     "AFL_Qweneditplus_Fastuse",
     "aspect_ratio_matcher",
+    "eye_direction",
     "image_auto_switch",
     "Letterbox_crop_and_resize",
     "lora_overwrite",
