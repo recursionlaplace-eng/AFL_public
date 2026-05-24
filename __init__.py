@@ -19,6 +19,11 @@ if not os.path.exists(nodes_dir):
 
 # AFL_public中包含的节点文件名（不带.py后缀）
 node_files = [
+    "AFL_audio_loop_calculator",
+    "AFL_audio_separation",
+    "AFL_audio_subtitles",
+    "AFL_rvc_infer",
+    "AFL_seed_vc",
     "AFL_Qweneditplus_FastuseV2",
     "AFL_LoadImage",
     "AFL_fast_text",
