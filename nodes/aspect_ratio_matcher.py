@@ -1,6 +1,3 @@
-import torch
-
-# 定义banana模式的宽高比及其对应的分辨率
 BANANA_ASPECT_RATIOS = {
     "1:1": (1024, 1024),
     "4:3": (1184, 864),
@@ -8,15 +5,14 @@ BANANA_ASPECT_RATIOS = {
     "2:3": (832, 1248),
     "3:2": (1248, 832),
     "9:16": (768, 1344),
-    "16:9": (1344, 768)
+    "16:9": (1344, 768),
 }
 
-# 定义qwen_image模式的宽高比及其对应的分辨率
 QWEN_IMAGE_ASPECT_RATIOS = {
     "16:9": (1664, 928),
     "9:16": (928, 1664),
     "4:3": (1472, 1140),
-    "3:4": (1140, 1472)
+    "3:4": (1140, 1472),
 }
 
 BANANA_PRO_ASPECT_RATIOS = {
@@ -30,7 +26,7 @@ BANANA_PRO_ASPECT_RATIOS = {
         "16:9": (1376, 768),
         "4:5": (928, 1152),
         "5:4": (1152, 928),
-        "21:9": (1584, 672)
+        "21:9": (1584, 672),
     },
     "2K": {
         "1:1": (2048, 2048),
@@ -42,7 +38,7 @@ BANANA_PRO_ASPECT_RATIOS = {
         "16:9": (2752, 1536),
         "4:5": (1856, 2304),
         "5:4": (2304, 1856),
-        "21:9": (3168, 1344)
+        "21:9": (3168, 1344),
     },
     "4K": {
         "1:1": (4096, 4096),
@@ -54,81 +50,127 @@ BANANA_PRO_ASPECT_RATIOS = {
         "16:9": (5504, 3072),
         "4:5": (3712, 4608),
         "5:4": (4608, 3712),
-        "21:9": (6336, 2688)
-    }
+        "21:9": (6336, 2688),
+    },
 }
+
+VIDEO_RESOLUTION_SHORT_SIDE = {
+    "480P": 480,
+    "720P": 720,
+    "1080P": 1080,
+}
+
+VIDEO_ASPECT_RATIO_LABELS = tuple(BANANA_PRO_ASPECT_RATIOS["1K"].keys())
 
 
 class aspect_ratio_matcher:
     """
-    ComfyUI节点：根据输入图像和选择的模式，计算最接近的标准宽高比，并输出对应分辨率
+    ComfyUI node:
+    Match the closest preset aspect ratio from the input image and
+    return the corresponding target width and height.
     """
-    def __init__(self):
-        pass
-    
+
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "image": ("IMAGE",),  # 输入图像
-                "mode": (["banana", "banana_pro", "qwen_image"],),  # 模式选择
-                "banana_pro_resolution":(["1K", "2K", "4K"],),
+                "image": ("IMAGE",),
+                "mode": ("COMBO", {
+                    "default": "banana",
+                    "options": ["banana", "banana_pro", "qwen_image", "video"],
+                    "tooltip": "选择分辨率映射模式。video 模式用于 480P / 720P / 1080P 这类视频规格。"
+                }),
+                "resolution": ("COMBO", {
+                    "default": "720P",
+                    "options": ["1K", "2K", "4K", "480P", "720P", "1080P"],
+                    "tooltip": "统一分辨率选项：banana_pro 使用 1K/2K/4K，video 使用 480P/720P/1080P，其它 mode 会忽略此项。"
+                }),
             }
         }
-    
+
     RETURN_TYPES = ("STRING", "INT", "INT")
     RETURN_NAMES = ("aspect_ratio", "width", "height")
     FUNCTION = "match_aspect_ratio"
     CATEGORY = "AFL/Image Calculator"
-    
-    def calculate_aspect_ratio(self, width, height):
+
+    @staticmethod
+    def calculate_aspect_ratio(width, height):
         if height == 0:
             return 0.0
         return width / height
-    
+
+    @staticmethod
+    def parse_aspect_ratio(ratio_str):
+        width_str, height_str = ratio_str.split(":")
+        return int(width_str), int(height_str)
+
+    @staticmethod
+    def round_to_even(value):
+        rounded = int(round(value))
+        return rounded if rounded % 2 == 0 else rounded + 1
+
     def find_closest_aspect_ratio(self, input_ratio, aspect_ratios):
-        # 根据当前模式的宽高比字典计算最接近的比例
-        ratio_values = {k: w/h for k, (w, h) in aspect_ratios.items()}
-        
+        ratio_values = {key: width / height for key, (width, height) in aspect_ratios.items()}
+
         closest_ratio = None
-        min_difference = float('inf')
-        
-        for ratio_str, ratio_val in ratio_values.items():
-            difference = abs(input_ratio - ratio_val)
+        min_difference = float("inf")
+
+        for ratio_str, ratio_value in ratio_values.items():
+            difference = abs(input_ratio - ratio_value)
             if difference < min_difference:
                 min_difference = difference
                 closest_ratio = ratio_str
-        
+
         return closest_ratio
-    
-    def match_aspect_ratio(self, image, mode, banana_pro_resolution):
-        # 根据选择的模式获取对应的宽高比字典
+
+    def build_video_aspect_ratios(self, video_resolution):
+        short_side = VIDEO_RESOLUTION_SHORT_SIDE[video_resolution]
+        aspect_ratios = {}
+
+        for ratio_str in VIDEO_ASPECT_RATIO_LABELS:
+            ratio_width, ratio_height = self.parse_aspect_ratio(ratio_str)
+
+            if ratio_width >= ratio_height:
+                height = short_side
+                width = self.round_to_even(short_side * ratio_width / ratio_height)
+            else:
+                width = short_side
+                height = self.round_to_even(short_side * ratio_height / ratio_width)
+
+            aspect_ratios[ratio_str] = (width, height)
+
+        return aspect_ratios
+
+    def match_aspect_ratio(
+        self,
+        image,
+        mode,
+        resolution="720P",
+    ):
         if mode == "banana":
             aspect_ratios = BANANA_ASPECT_RATIOS
         elif mode == "banana_pro":
-            aspect_ratios = BANANA_PRO_ASPECT_RATIOS
-        else:  # qwen_image模式
-            aspect_ratios = QWEN_IMAGE_ASPECT_RATIOS
-        
-        # 获取图像尺寸 (batch, height, width, channels)
-        batch_size, height, width, channels = image.shape
-        
-        input_ratio = self.calculate_aspect_ratio(width, height)
-        
-        if mode == "banana_pro":
-            closest_ratio = self.find_closest_aspect_ratio(input_ratio, aspect_ratios[banana_pro_resolution])
-            target_width, target_height = aspect_ratios[banana_pro_resolution][closest_ratio]
+            banana_pro_resolution = resolution if resolution in BANANA_PRO_ASPECT_RATIOS else "1K"
+            aspect_ratios = BANANA_PRO_ASPECT_RATIOS[banana_pro_resolution]
+        elif mode == "video":
+            video_resolution = resolution if resolution in VIDEO_RESOLUTION_SHORT_SIDE else "720P"
+            aspect_ratios = self.build_video_aspect_ratios(video_resolution)
         else:
-            closest_ratio = self.find_closest_aspect_ratio(input_ratio, aspect_ratios)
-            target_width, target_height = aspect_ratios[closest_ratio]
-        
+            aspect_ratios = QWEN_IMAGE_ASPECT_RATIOS
+
+        _, height, width, _ = image.shape
+        input_ratio = self.calculate_aspect_ratio(width, height)
+
+        closest_ratio = self.find_closest_aspect_ratio(input_ratio, aspect_ratios)
+        target_width, target_height = aspect_ratios[closest_ratio]
+
         return (closest_ratio, target_width, target_height)
 
-# 节点注册
+
 NODE_CLASS_MAPPINGS = {
     "AFL:aspect_ratio_matcher": aspect_ratio_matcher
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "AFL:aspect_ratio_matcher": "aspect_ratio_matcher"
+    "AFL:aspect_ratio_matcher": "Aspect Ratio Matcher"
 }
