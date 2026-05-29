@@ -1,0 +1,14 @@
+# Portable bundle helper list for AFL RVC Convert.
+# Install these into `python_embeded` when preparing a distributable package.
+#
+# This list is intentionally smaller than the full upstream RVC requirements
+# and focuses on the packages needed by the current AFL offline inference path.
+
+python-dotenv
+soundfile
+ffmpeg-python
+faiss-cpu
+pyworld==0.3.5
+torchcrepe==0.0.24
+praat-parselmouth
+fairseq @ git+https://github.com/One-sixth/fairseq.git

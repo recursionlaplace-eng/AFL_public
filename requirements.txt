@@ -1,5 +1,13 @@
 torch
+torchaudio
 numpy
 opencv-python
 scipy
 pyyaml
+librosa
+huggingface-hub
+munch
+einops
+pydub
+soundfile
+python-dotenv
